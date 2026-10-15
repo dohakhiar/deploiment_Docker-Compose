@@ -1,0 +1,6 @@
+.venv/
+.venv.stale/
+work/pip-tmp/
+__pycache__/
+*.py[cod]
+artifacts/*.joblib

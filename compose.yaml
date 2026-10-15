@@ -1,0 +1,33 @@
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    command: ["python", "-m", "src.train", "--data", "/data/adult.csv", "--out", "/artifacts/model.joblib"]
+    volumes:
+      - ./data:/data:ro
+      - model-artifacts:/artifacts
+    restart: "no"
+
+  predict:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve.opt
+    environment:
+      MODEL_PATH: /artifacts/model.joblib
+    volumes:
+      - model-artifacts:/artifacts:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      train:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  model-artifacts:
